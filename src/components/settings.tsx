@@ -50,6 +50,7 @@ export const Settings = () => {
             <Input
               id="api-key"
               placeholder="OpenAI API Key"
+              defaultValue={localStorage.getItem("openai-api-key") ?? ''}
               ref={openAiApiKeyRef}
             />
           </div>

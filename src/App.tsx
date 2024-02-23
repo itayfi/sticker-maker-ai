@@ -8,10 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
-import { ChevronLeft, Loader2, SettingsIcon } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { cn } from "./lib/utils";
 import { Settings } from "./components/settings";
+import { AiGenerate } from "./components/ai-generate";
+import { Separator } from "./components/ui/separator";
 
 function App() {
   const [imageSrc, setImageSrc] = useState<string>();
@@ -74,6 +76,19 @@ function App() {
         ) : (
           <CardContent>
             <FileUpload accept="image/*" onChange={onSelectImage} />
+            <Separator className="my-6">
+              <div className="text-center -translate-y-1/2">
+                <span className="px-4 bg-card">OR</span>
+              </div>
+            </Separator>
+            <AiGenerate
+              onStart={() => setIsPending(true)}
+              onError={() => setIsPending(false)}
+              onFinish={(url) => {
+                setImageSrc(url);
+                setIsPending(false);
+              }}
+            />
           </CardContent>
         )}
         {isPending && (
