@@ -8,9 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, SettingsIcon } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { cn } from "./lib/utils";
+import { Settings } from "./components/settings";
 
 function App() {
   const [imageSrc, setImageSrc] = useState<string>();
@@ -42,7 +43,7 @@ function App() {
           "pointer-events-none": isPending,
         })}
       >
-        <CardHeader className="flex flex-row items-center gap-1">
+        <CardHeader className="flex flex-row items-center gap-1 space-y-0">
           {imageSrc ? (
             <Button
               variant="ghost"
@@ -53,6 +54,8 @@ function App() {
             </Button>
           ) : null}
           <CardTitle>Sticker Maker AI</CardTitle>
+          <div className="flex-grow" />
+          <Settings />
         </CardHeader>
         {imageSrc ? (
           <>
