@@ -11,11 +11,11 @@ export default defineConfig({
       targets: [
         {
           src: "./node_modules/onnxruntime-web/dist/ort-wasm.wasm",
-          dest: "/",
+          dest: "./",
         },
         {
           src: "./node_modules/onnxruntime-web/dist/ort-wasm-simd.wasm",
-          dest: "/",
+          dest: "./",
         },
       ],
     }),
@@ -25,4 +25,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: '/sticker-maker-ai/',
 });
