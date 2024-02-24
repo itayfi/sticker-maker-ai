@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { removeBg } from "./lib/removeBg";
 import { FileUpload } from "./components/file-upload";
 import {
@@ -14,7 +13,6 @@ import {
   ImageMinus,
   Loader2,
   PencilLine,
-  TextCursorInput,
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { cn } from "./lib/utils";
@@ -22,42 +20,55 @@ import { Settings } from "./components/settings";
 import { AiGenerate } from "./components/ai-generate";
 import { Separator } from "./components/ui/separator";
 import { addOutline } from "./lib/outline";
+import { machine } from "./lib/machine";
+import { useMachine } from "@xstate/react";
 
 function App() {
-  const [imageSrc, setImageSrc] = useState<string>();
-  const [isPending, setIsPending] = useState(false);
+  const [state, send] = useMachine(machine);
 
   const onSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) {
       return;
     }
-    setImageSrc(URL.createObjectURL(e.target.files[0]));
+    send({
+      type: "file-upload",
+      newImagePath: URL.createObjectURL(e.target.files[0]),
+    });
   };
 
   const onRemoveBg = async () => {
-    if (!imageSrc) {
+    const imagePath = state.context.imagePath;
+    if (!imagePath) {
       return;
     }
     try {
-      setIsPending(true);
-      setImageSrc(await removeBg(imageSrc));
-    } finally {
-      setIsPending(false);
+      send({ type: "remove-bg" });
+      send({
+        type: "done",
+        newImagePath: await removeBg(imagePath),
+      });
+    } catch (e) {
+      send({ type: "error" });
     }
   };
 
   const onAddOutline = async () => {
-    if (!imageSrc) {
+    const imagePath = state.context.imagePath;
+    if (!imagePath) {
       return;
     }
     try {
-      setIsPending(true);
-      setImageSrc(await addOutline(imageSrc, "white", 5));
-    } finally {
-      setIsPending(false);
+      send({ type: "add-outline" });
+      send({
+        type: "done",
+        newImagePath: await addOutline(imagePath, "white", 5),
+      });
+    } catch (e) {
+      send({ type: "error" });
     }
   };
 
+  const isPending = state.hasTag("loading");
   return (
     <div className="container my-10 mx-auto px-3 max-w-xl">
       <Card
@@ -66,11 +77,11 @@ function App() {
         })}
       >
         <CardHeader className="flex flex-row items-center gap-1 space-y-0">
-          {imageSrc ? (
+          {state.context.imagePath ? (
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setImageSrc(undefined)}
+              onClick={() => send({ type: "back" })}
             >
               <ChevronLeft />
             </Button>
@@ -79,18 +90,18 @@ function App() {
           <div className="flex-grow" />
           <Settings />
         </CardHeader>
-        {imageSrc ? (
+        {state.context.imagePath ? (
           <>
             <CardContent>
               <img
                 className="mx-auto my-2 bg-[url('/checkers.svg')]"
-                src={imageSrc}
+                src={state.context.imagePath}
               />
             </CardContent>
             <CardFooter className="gap-1.5 flex-wrap">
               <Button
                 onClick={onRemoveBg}
-                disabled={!imageSrc}
+                disabled={!state.context.imagePath}
                 variant="outline"
               >
                 <ImageMinus className="mr-2 size-4" />
@@ -105,7 +116,7 @@ function App() {
                 Add Text
               </Button> */}
               <Button variant="outline" asChild>
-                <a href={imageSrc} download>
+                <a href={state.context.imagePath} download>
                   <ImageDown className="mr-2 size-4" />
                   Download
                 </a>
@@ -121,11 +132,10 @@ function App() {
               </div>
             </Separator>
             <AiGenerate
-              onStart={() => setIsPending(true)}
-              onError={() => setIsPending(false)}
+              onStart={() => send({ type: "ai-generate" })}
+              onError={() => send({ type: "error" })}
               onFinish={(url) => {
-                setImageSrc(url);
-                setIsPending(false);
+                send({ type: "done", newImagePath: url });
               }}
             />
           </CardContent>
