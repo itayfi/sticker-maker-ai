@@ -12,27 +12,24 @@ import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Input } from "./ui/input";
 import { useRef } from "react";
+import { useLocalStorage } from "@uidotdev/usehooks";
 
 export const Settings = () => {
   const openAiApiKeyRef = useRef<HTMLInputElement>(null);
-
-  const darkMode =
-    localStorage.theme === "dark" ||
-    (!("theme" in localStorage) &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const [apiKey, setApiKey] = useLocalStorage("openai-api-key", "");
+  const [darkMode, setDarkMode] = useLocalStorage(
+    "theme",
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+  );
 
   const onToggleDarkTheme = (checked: boolean) => {
-    localStorage.theme = checked ? "dark" : "light";
+    setDarkMode(checked ? "dark" : "light");
     document.documentElement.classList.toggle("dark", checked);
   };
 
   const onSave = () => {
     const value = openAiApiKeyRef.current?.value;
-    if (value && value !== "") {
-      localStorage.setItem("openai-api-key", value);
-    } else {
-      localStorage.removeItem("openai-api-key");
-    }
+    setApiKey(value ?? "");
   };
 
   return (
@@ -50,14 +47,14 @@ export const Settings = () => {
             <Input
               id="api-key"
               placeholder="OpenAI API Key"
-              defaultValue={localStorage.getItem("openai-api-key") ?? ''}
+              defaultValue={apiKey}
               ref={openAiApiKeyRef}
             />
           </div>
           <div className="flex items-center space-x-2">
             <Switch
               id="dark-mode"
-              defaultChecked={darkMode}
+              checked={darkMode === "dark"}
               onCheckedChange={onToggleDarkTheme}
             />
             <Label htmlFor="dark-mode">Dark Theme</Label>
