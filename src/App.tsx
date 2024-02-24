@@ -8,12 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ImageDown,
+  ImageMinus,
+  Loader2,
+  PencilLine,
+  TextCursorInput,
+} from "lucide-react";
 import { Button } from "./components/ui/button";
 import { cn } from "./lib/utils";
 import { Settings } from "./components/settings";
 import { AiGenerate } from "./components/ai-generate";
 import { Separator } from "./components/ui/separator";
+import { addOutline } from "./lib/outline";
 
 function App() {
   const [imageSrc, setImageSrc] = useState<string>();
@@ -33,6 +41,18 @@ function App() {
     try {
       setIsPending(true);
       setImageSrc(await removeBg(imageSrc));
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const onAddOutline = async () => {
+    if (!imageSrc) {
+      return;
+    }
+    try {
+      setIsPending(true);
+      setImageSrc(await addOutline(imageSrc, "white", 5));
     } finally {
       setIsPending(false);
     }
@@ -67,9 +87,28 @@ function App() {
                 src={imageSrc}
               />
             </CardContent>
-            <CardFooter>
-              <Button onClick={onRemoveBg} disabled={!imageSrc}>
+            <CardFooter className="gap-1.5 flex-wrap">
+              <Button
+                onClick={onRemoveBg}
+                disabled={!imageSrc}
+                variant="outline"
+              >
+                <ImageMinus className="mr-2 size-4" />
                 Remove BG
+              </Button>
+              <Button variant="outline" onClick={onAddOutline}>
+                <PencilLine className="mr-2 size-4" />
+                Outline
+              </Button>
+              {/* <Button variant="outline">
+                <TextCursorInput className="mr-2 size-4" />
+                Add Text
+              </Button> */}
+              <Button variant="outline" asChild>
+                <a href={imageSrc} download>
+                  <ImageDown className="mr-2 size-4" />
+                  Download
+                </a>
               </Button>
             </CardFooter>
           </>

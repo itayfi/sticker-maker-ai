@@ -2,6 +2,8 @@ import { Tensor } from "onnxruntime-common";
 import * as ort from "onnxruntime-web";
 import { TypedTensor } from "onnxruntime-web";
 import u2netp from "../assets/u2netp.onnx?url";
+import { loadImageOriginalScale } from "./utils";
+import { imageDataToDataUrl } from "./utils";
 
 async function getImageTensorFromPath(
   path: string,
@@ -31,21 +33,6 @@ async function loadImagefromPath(
   ctx.drawImage(image, 0, 0, width, height);
 
   return ctx.getImageData(0, 0, width, height);
-}
-
-export async function loadImageOriginalScale(path: string) {
-  const image = new Image();
-  image.src = path;
-  await new Promise((resolve) => {
-    image.onload = resolve;
-  });
-  const canvas = new OffscreenCanvas(image.width, image.height);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Failed to get canvas context");
-  }
-  ctx.drawImage(image, 0, 0);
-  return ctx.getImageData(0, 0, image.width, image.height);
 }
 
 function setOpacityFromTensor(
@@ -87,18 +74,6 @@ function lerp(v0: number, v1: number, t: number) {
   return (1 - t) * v0 + t * v1;
 }
 
-async function imageDataToDataUrl(image: ImageData) {
-  const canvas = new OffscreenCanvas(image.width, image.height);
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) {
-    throw new Error("Failed to get canvas context");
-  }
-
-  ctx.putImageData(image, 0, 0);
-  const blob = await canvas.convertToBlob();
-  return URL.createObjectURL(blob);
-}
 export async function runU2NetModel(preprocessedData: any) {
   const session = await ort.InferenceSession.create(u2netp, {
     executionProviders: ["wasm"],
