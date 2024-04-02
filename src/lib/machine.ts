@@ -153,7 +153,7 @@ export const machine = setup({
                 type: "set",
               },
             },
-            error: {
+            back: {
               target: "Idle",
             },
           },
@@ -166,7 +166,7 @@ export const machine = setup({
                 type: "set",
               },
             },
-            error: {
+            back: {
               target: "Idle",
             },
           },
