@@ -1,3 +1,4 @@
+import { createActorContext } from "@xstate/react";
 import { setup } from "xstate";
 
 export const machine = setup({
@@ -12,7 +13,7 @@ export const machine = setup({
       | { type: "file-upload"; newImagePath: string }
       | { type: "add-outline" }
       | { type: "remove-bg" }
-      | { type: "ai-generate"; /*prompt: string; model: string*/ },
+      | { type: "ai-generate" },
   },
   actions: {
     reset: function ({ context }) {
@@ -104,7 +105,7 @@ export const machine = setup({
       },
     },
     Loading: {
-      tags: ['loading'],
+      tags: ["loading"],
       on: {
         done: {
           target: "Image Editting",
@@ -145,7 +146,7 @@ export const machine = setup({
           },
         },
         "Editting outline": {
-          tags: ['loading'],
+          tags: ["loading"],
           on: {
             done: {
               target: "Idle",
@@ -172,7 +173,7 @@ export const machine = setup({
           },
         },
         "Removing BG": {
-          tags: ['loading'],
+          tags: ["loading"],
           on: {
             done: {
               target: "Idle",
@@ -189,3 +190,5 @@ export const machine = setup({
     },
   },
 });
+
+export const MachineContext = createActorContext(machine);
