@@ -1,5 +1,4 @@
 import { MachineContext } from "@/lib/machine";
-import { addOutline } from "@/lib/outline";
 import { removeBg } from "@/lib/removeBg";
 import { CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
@@ -27,18 +26,7 @@ export const ImageEditting = () => {
   };
 
   const onAddOutline = () => {
-    if (!imagePath) {
-      return;
-    }
     send({ type: "add-outline" });
-    addOutline(imagePath, "white", 5)
-      .then((newImagePath) =>
-        send({
-          type: "done",
-          newImagePath,
-        })
-      )
-      .catch(() => send({ type: "error" }));
   };
 
   if (!imagePath) {

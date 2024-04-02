@@ -6,6 +6,7 @@ import { Settings } from "./components/settings";
 import { MachineContext } from "./lib/machine";
 import { InitialState } from "./components/states/initial-state";
 import { ImageEditting } from "./components/states/image-editting";
+import { OutlineEditting } from "./components/states/outline-editting";
 
 function App() {
   const state = MachineContext.useSelector((state) => state);
@@ -20,6 +21,9 @@ function App() {
     }
     if (!state.context.imagePath) {
       return null;
+    }
+    if (state.matches({"Image Editting": "Editting outline"})) {
+      return <OutlineEditting />;
     }
     return <ImageEditting />;
   };

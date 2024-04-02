@@ -146,7 +146,6 @@ export const machine = setup({
           },
         },
         "Editting outline": {
-          tags: ["loading"],
           on: {
             done: {
               target: "Idle",
