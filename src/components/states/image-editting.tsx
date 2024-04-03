@@ -2,7 +2,12 @@ import { MachineContext } from "@/lib/machine";
 import { removeBg } from "@/lib/removeBg";
 import { CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
-import { ImageDown, ImageMinus, PencilLine } from "lucide-react";
+import {
+  ImageDown,
+  ImageMinus,
+  PencilLine,
+  TextCursorInput,
+} from "lucide-react";
 
 export const ImageEditting = () => {
   const { send } = MachineContext.useActorRef();
@@ -29,6 +34,10 @@ export const ImageEditting = () => {
     send({ type: "add-outline" });
   };
 
+  const onAddText = () => {
+    send({ type: "add-text" });
+  };
+
   if (!imagePath) {
     return null;
   }
@@ -50,10 +59,10 @@ export const ImageEditting = () => {
           <PencilLine className="mr-2 size-4" />
           Outline
         </Button>
-        {/* <Button variant="outline">
-      <TextCursorInput className="mr-2 size-4" />
-      Add Text
-    </Button> */}
+        <Button variant="outline" onClick={onAddText}>
+          <TextCursorInput className="mr-2 size-4" />
+          Add Text
+        </Button>
         <Button variant="outline" asChild>
           <a href={imagePath} download>
             <ImageDown className="mr-2 size-4" />
