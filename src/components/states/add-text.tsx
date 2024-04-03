@@ -57,7 +57,7 @@ export const AddText = () => {
       },
       { passive: false }
     );
-  }, [canvas.current]);
+  }, []);
 
   const onCancel = () => send({ type: "back" });
   const onApply = () => {
