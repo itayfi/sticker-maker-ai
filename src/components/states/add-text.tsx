@@ -3,17 +3,20 @@ import { CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ColorPicker, colors } from "../color-picker";
+import { SquarePen } from "lucide-react";
 
 export const AddText = () => {
   const [color, setColor] = useState(colors[0]);
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(32);
   const [textPosition, setTextPosition] = useState<[number, number]>([0, 0]);
+  const [textStroke, setTextStroke] = useState<string>();
   const { send } = MachineContext.useActorRef();
   const imagePath = MachineContext.useSelector(
     (state) => state.context.imagePath
   )!;
   const canvas = useRef<HTMLCanvasElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<HTMLImageElement>();
 
   useEffect(() => {
@@ -37,27 +40,33 @@ export const AddText = () => {
     ctx.font = `bold ${fontSize}px sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    if (textStroke) {
+      ctx.strokeStyle = textStroke;
+      ctx.lineWidth = fontSize * 0.1;
+      ctx.strokeText(text, ...textPosition);
+    }
     ctx.fillText(text, ...textPosition);
-  }, [image, color, canvas, text, fontSize, textPosition]);
+  }, [image, color, canvas, text, fontSize, textPosition, textStroke]);
+
+  useEffect(() => {
+    canvas.current?.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        setFontSize((s) => s + e.deltaY);
+      },
+      { passive: false }
+    );
+  }, [canvas.current]);
 
   const onCancel = () => send({ type: "back" });
   const onApply = () => {
     if (!canvas.current) return;
     send({ type: "done", newImagePath: canvas.current.toDataURL() });
   };
-  const onKeyUp = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
-    if (e.key === "Backspace") {
-      setText((t) => t.slice(0, -1));
-    } else if (e.key.length === 1) {
-      setText((t) => t + e.key);
-    }
-  };
-  const onWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    setFontSize((s) => s + e.deltaY);
-  };
   const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!e.buttons || !canvas.current) return;
-    console.log([e.movementX, e.movementY]);
+
     const ratio = canvas.current.width / canvas.current.clientWidth;
     setTextPosition(([x, y]) => [
       x + ratio * e.movementX,
@@ -72,15 +81,33 @@ export const AddText = () => {
           ref={canvas}
           width={image?.width}
           height={image?.height}
-          onKeyUp={onKeyUp}
-          onWheel={onWheel}
           onMouseMove={onMouseMove}
+          onClick={() => input.current?.focus()}
           className="max-w-full mx-auto my-2 bg-[url('/checkers.svg')]"
-          tabIndex={1}
+        />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className="opacity-0 absolute"
+          ref={input}
         />
       </CardContent>
       <CardFooter className="gap-1.5">
         <ColorPicker color={color} setColor={setColor} />
+        <Button
+          variant="secondary"
+          size="icon"
+          className="ml-3"
+          onClick={() =>
+            setTextStroke((value) =>
+              value
+                ? { "#000000": "#ffffff", "#ffffff": undefined }[value]
+                : "#000000"
+            )
+          }
+        >
+          <SquarePen />
+        </Button>
         <Button variant="secondary" onClick={onCancel} className="ml-auto">
           Cancel
         </Button>
