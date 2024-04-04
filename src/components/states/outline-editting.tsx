@@ -1,6 +1,6 @@
 import { MachineContext } from "@/lib/machine";
 import { CardContent, CardFooter } from "../ui/card";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { ColorPicker, colors } from "../color-picker";
@@ -8,27 +8,17 @@ import {
   OutlinePreview,
   OutlinePreviewMethods,
 } from "../outline/outline-preview";
+import { useImage } from "@/lib/use-image";
 
 export const OutlineEditting = () => {
   const [color, setColor] = useState(colors[0]);
   const [outline, setOutline] = useState(3);
-  const [image, setImage] = useState<HTMLImageElement>();
   const canvas = useRef<OutlinePreviewMethods>(null);
   const { send } = MachineContext.useActorRef();
+  const image = useImage();
   const imagePath = MachineContext.useSelector(
     (state) => state.context.imagePath
   )!;
-
-  useEffect(() => {
-    const newImage = new Image();
-    const handler = () => {
-      setImage(newImage);
-    };
-    newImage.addEventListener("load", handler);
-    newImage.src = imagePath;
-
-    return () => newImage.removeEventListener("load", handler);
-  }, [imagePath]);
 
   const onApply = () => {
     const newImagePath = canvas.current?.getDataURL();

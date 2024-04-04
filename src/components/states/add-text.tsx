@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ColorPicker, colors } from "../color-picker";
 import { SquarePen } from "lucide-react";
 import interact from "interactjs";
+import { useImage } from "@/lib/use-image";
 
 export const AddText = () => {
   const [color, setColor] = useState(colors[0]);
@@ -14,24 +15,9 @@ export const AddText = () => {
   const [textPosition, setTextPosition] = useState<[number, number]>([0, 0]);
   const [textStroke, setTextStroke] = useState<string>();
   const { send } = MachineContext.useActorRef();
-  const imagePath = MachineContext.useSelector(
-    (state) => state.context.imagePath
-  )!;
   const canvas = useRef<HTMLCanvasElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<HTMLImageElement>();
-
-  useEffect(() => {
-    const newImage = new Image();
-    const handler = () => {
-      setImage(newImage);
-      setTextPosition([newImage.width / 2, newImage.height / 2]);
-    };
-    newImage.addEventListener("load", handler);
-    newImage.src = imagePath;
-
-    return () => newImage.removeEventListener("load", handler);
-  }, [imagePath]);
+  const image = useImage();
 
   useEffect(() => {
     if (!image || !canvas.current) return;
@@ -44,7 +30,7 @@ export const AddText = () => {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.translate(...textPosition);
-    ctx.rotate(Math.PI * textRotation / 180);
+    ctx.rotate((Math.PI * textRotation) / 180);
     if (textStroke) {
       ctx.strokeStyle = textStroke;
       ctx.lineWidth = fontSize * 0.1;
@@ -62,6 +48,12 @@ export const AddText = () => {
     textStroke,
     textRotation,
   ]);
+
+  useEffect(() => {
+    if (image) {
+      setTextPosition([image.width / 2, image.height / 2]);
+    }
+  }, [image]);
 
   useEffect(() => {
     canvas.current?.addEventListener(
