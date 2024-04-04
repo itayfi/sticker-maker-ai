@@ -2,8 +2,6 @@ import { Tensor } from "onnxruntime-common";
 import * as ort from "onnxruntime-web";
 import { TypedTensor } from "onnxruntime-web";
 import u2netp from "../assets/u2netp.onnx?url";
-import { loadImageOriginalScale } from "./utils";
-import { imageDataToDataUrl } from "./utils";
 
 async function getImageTensorFromPath(
   path: string,
@@ -35,20 +33,20 @@ async function loadImagefromPath(
   return ctx.getImageData(0, 0, width, height);
 }
 
-function setOpacityFromTensor(
+export function setOpacityWithThreshold(
   image: ImageData,
-  tensor: TypedTensor<"float32">
+  tensor: TypedTensor<"float32">,
+  threshold: number
 ) {
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
-      // const index = (x * image.width + y) * 4;
       const index = (y * image.width + x) * 4;
       const value = tensorBilinearSample(
         tensor,
         (tensor.dims[2] * x) / image.width,
         (tensor.dims[3] * y) / image.height
       );
-      image.data[index + 3] = Math.floor(value * 255);
+      image.data[index + 3] = value < threshold ? 0 : 255;
     }
   }
 }
@@ -82,13 +80,10 @@ export async function runU2NetModel(preprocessedData: Tensor) {
   return session.run({ "input.1": preprocessedData });
 }
 
-export async function removeBg(path: string) {
+export async function getBackgroundTensor(path: string) {
   const data = await getImageTensorFromPath(path);
-  const origImage = await loadImageOriginalScale(path);
   const result = await runU2NetModel(data);
-  const minResult = Object.entries(result).reduce((min, [key, value]) =>
+  return Object.entries(result).reduce((min, [key, value]) =>
     parseInt(key) < parseInt(min[0]) ? [key, value] : min
-  )[1];
-  setOpacityFromTensor(origImage, minResult as TypedTensor<"float32">);
-  return imageDataToDataUrl(origImage);
+  )[1] as TypedTensor<"float32">;
 }

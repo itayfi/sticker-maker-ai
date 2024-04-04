@@ -8,6 +8,7 @@ import { InitialState } from "./components/states/initial-state";
 import { ImageEditting } from "./components/states/image-editting";
 import { OutlineEditting } from "./components/states/outline-editting";
 import { AddText } from "./components/states/add-text";
+import { RemoveBg } from "./components/states/remove-bg";
 
 function App() {
   const state = MachineContext.useSelector((state) => state);
@@ -28,6 +29,9 @@ function App() {
     }
     if (state.matches({ "Image Editting": "Adding text" })) {
       return <AddText />;
+    }
+    if (state.matches({ "Image Editting": "Removing BG" })) {
+      return <RemoveBg />;
     }
     return <ImageEditting />;
   };

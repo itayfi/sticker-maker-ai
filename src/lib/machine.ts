@@ -69,14 +69,7 @@ export const machine = setup({
       },
       "ai-generate": {
         type: "object",
-        properties: {
-          // prompt: {
-          //   type: "string",
-          // },
-          // model: {
-          //   type: "string",
-          // },
-        },
+        properties: {},
       },
     },
     context: {
@@ -172,13 +165,15 @@ export const machine = setup({
           },
         },
         "Removing BG": {
-          tags: ["loading"],
           on: {
             done: {
               target: "Idle",
               actions: {
                 type: "set",
               },
+            },
+            back: {
+              target: "Idle",
             },
             error: {
               target: "Idle",

@@ -1,5 +1,4 @@
 import { MachineContext } from "@/lib/machine";
-import { removeBg } from "@/lib/removeBg";
 import { CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import {
@@ -16,18 +15,7 @@ export const ImageEditting = () => {
   );
 
   const onRemoveBg = async () => {
-    if (!imagePath) {
-      return;
-    }
     send({ type: "remove-bg" });
-    removeBg(imagePath)
-      .then((newImagePath) =>
-        send({
-          type: "done",
-          newImagePath,
-        })
-      )
-      .catch(() => send({ type: "error" }));
   };
 
   const onAddOutline = () => {
