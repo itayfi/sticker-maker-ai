@@ -4,11 +4,13 @@ import { Button } from "../ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ColorPicker, colors } from "../color-picker";
 import { SquarePen } from "lucide-react";
+import interact from "interactjs";
 
 export const AddText = () => {
   const [color, setColor] = useState(colors[0]);
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(32);
+  const [textRotation, setTextRotation] = useState(0);
   const [textPosition, setTextPosition] = useState<[number, number]>([0, 0]);
   const [textStroke, setTextStroke] = useState<string>();
   const { send } = MachineContext.useActorRef();
@@ -36,42 +38,72 @@ export const AddText = () => {
     const ctx = canvas.current.getContext("2d")!;
     ctx.clearRect(0, 0, canvas.current.width, canvas.current.height);
     ctx.drawImage(image, 0, 0);
+    ctx.save();
     ctx.fillStyle = color;
     ctx.font = `bold ${fontSize}px sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.translate(...textPosition);
+    ctx.rotate(Math.PI * textRotation / 180);
     if (textStroke) {
       ctx.strokeStyle = textStroke;
       ctx.lineWidth = fontSize * 0.1;
-      ctx.strokeText(text, ...textPosition);
+      ctx.strokeText(text, 0, 0);
     }
-    ctx.fillText(text, ...textPosition);
-  }, [image, color, canvas, text, fontSize, textPosition, textStroke]);
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+  }, [
+    image,
+    color,
+    canvas,
+    text,
+    fontSize,
+    textPosition,
+    textStroke,
+    textRotation,
+  ]);
 
   useEffect(() => {
     canvas.current?.addEventListener(
       "wheel",
       (e) => {
         e.preventDefault();
-        setFontSize((s) => s + e.deltaY);
+        setFontSize((s) => s - e.deltaY);
       },
       { passive: false }
     );
+  }, []);
+
+  useEffect(() => {
+    if (!canvas.current) return;
+
+    interact(canvas.current)
+      .gesturable({
+        listeners: {
+          move: (e) => {
+            if (!canvas.current) return;
+
+            setFontSize((s) => s * (1 + e.ds));
+            setTextRotation((r) => r + e.da);
+          },
+        },
+      })
+      .draggable({
+        listeners: {
+          move: (e) => {
+            if (!canvas.current) return;
+
+            const ratio = canvas.current.width / canvas.current.clientWidth;
+            setTextPosition(([x, y]) => [x + ratio * e.dx, y + ratio * e.dy]);
+          },
+        },
+      });
   }, []);
 
   const onCancel = () => send({ type: "back" });
   const onApply = () => {
     if (!canvas.current) return;
     send({ type: "done", newImagePath: canvas.current.toDataURL() });
-  };
-  const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!e.buttons || !canvas.current) return;
-
-    const ratio = canvas.current.width / canvas.current.clientWidth;
-    setTextPosition(([x, y]) => [
-      x + ratio * e.movementX,
-      y + ratio * e.movementY,
-    ]);
   };
 
   return (
@@ -81,9 +113,8 @@ export const AddText = () => {
           ref={canvas}
           width={image?.width}
           height={image?.height}
-          onMouseMove={onMouseMove}
           onClick={() => input.current?.focus()}
-          className="max-w-full mx-auto my-2 bg-[url('/checkers.svg')]"
+          className="max-w-full mx-auto my-2 bg-[url('/checkers.svg')] touch-none"
         />
         <input
           value={text}
@@ -92,7 +123,7 @@ export const AddText = () => {
           ref={input}
         />
       </CardContent>
-      <CardFooter className="gap-1.5">
+      <CardFooter className="gap-1.5 flex-wrap">
         <ColorPicker color={color} setColor={setColor} />
         <Button
           variant="secondary"
