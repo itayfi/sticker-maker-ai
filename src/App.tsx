@@ -5,10 +5,14 @@ import { cn } from "./lib/utils";
 import { Settings } from "./components/settings";
 import { MachineContext } from "./lib/machine";
 import { InitialState } from "./components/states/initial-state";
-import { ImageEditting } from "./components/states/image-editting";
-import { OutlineEditting } from "./components/states/outline-editting";
-import { AddText } from "./components/states/add-text";
-import { RemoveBg } from "./components/states/remove-bg";
+import { Suspense, lazy } from "react";
+
+const ImageEditting = lazy(() => import("./components/states/image-editting"));
+const OutlineEditting = lazy(
+  () => import("./components/states/outline-editting")
+);
+const AddText = lazy(() => import("./components/states/add-text"));
+const RemoveBg = lazy(() => import("./components/states/remove-bg"));
 
 function App() {
   const state = MachineContext.useSelector((state) => state);
@@ -58,7 +62,15 @@ function App() {
           <div className="flex-grow" />
           <Settings />
         </CardHeader>
-        {getComponent()}
+        <Suspense
+          fallback={
+            <div className="bg-slate-500/30 w-full h-96 flex items-center justify-center">
+              <Loader2 className="animate-spin size-20" />
+            </div>
+          }
+        >
+          {getComponent()}
+        </Suspense>
         {isPending && (
           <div className="absolute bg-slate-500/30 w-full h-full top-0 left-0 flex items-center justify-center">
             <Loader2 className="animate-spin size-20" />

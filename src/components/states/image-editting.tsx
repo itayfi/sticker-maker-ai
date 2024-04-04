@@ -8,7 +8,7 @@ import {
   TextCursorInput,
 } from "lucide-react";
 
-export const ImageEditting = () => {
+const ImageEditting = () => {
   const { send } = MachineContext.useActorRef();
   const imagePath = MachineContext.useSelector(
     (state) => state.context.imagePath
@@ -61,3 +61,5 @@ export const ImageEditting = () => {
     </>
   );
 };
+
+export default ImageEditting;

@@ -10,7 +10,7 @@ import {
 } from "../outline/outline-preview";
 import { useImage } from "@/lib/use-image";
 
-export const OutlineEditting = () => {
+const OutlineEditting = () => {
   const [color, setColor] = useState(colors[0]);
   const [outline, setOutline] = useState(3);
   const canvas = useRef<OutlinePreviewMethods>(null);
@@ -64,3 +64,5 @@ export const OutlineEditting = () => {
     </>
   );
 };
+
+export default OutlineEditting;

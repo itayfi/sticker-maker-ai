@@ -8,7 +8,7 @@ import { TypedTensor } from "onnxruntime-web";
 import { getBackgroundTensor, setOpacityWithThreshold } from "@/lib/removeBg";
 import { cn } from "@/lib/utils";
 
-export const RemoveBg = () => {
+const RemoveBg = () => {
   const [threshold, setThreshold] = useState(0.1);
   const canvas = useRef<HTMLCanvasElement>(null);
   const image = useImage();
@@ -100,3 +100,5 @@ export const RemoveBg = () => {
     </>
   );
 };
+
+export default RemoveBg;

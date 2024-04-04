@@ -7,7 +7,7 @@ import { SquarePen } from "lucide-react";
 import interact from "interactjs";
 import { useImage } from "@/lib/use-image";
 
-export const AddText = () => {
+const AddText = () => {
   const [color, setColor] = useState(colors[0]);
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(32);
@@ -139,3 +139,5 @@ export const AddText = () => {
     </>
   );
 };
+
+export default AddText;
