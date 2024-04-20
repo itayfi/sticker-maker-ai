@@ -13,6 +13,7 @@ export const useImage = () => {
       setImage(newImage);
     };
     newImage.addEventListener("load", handler);
+    newImage.crossOrigin = "anonymous";
     newImage.src = imagePath;
 
     return () => newImage.removeEventListener("load", handler);
