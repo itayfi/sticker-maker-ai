@@ -21,7 +21,7 @@ export async function generateUsingEmoji({ prompt }: { prompt: string }) {
   )) as BertPreTrainedModel;
   const binaryEmbedding = await embedString(tokenizer, prompt, model);
 
-  const emojiData = (await emojiDataPromise) as {
+  const emojiData = (await emojiDataPromise) as unknown as {
     default: { embed: string; gStaticUrl: string }[];
   };
 
