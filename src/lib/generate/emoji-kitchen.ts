@@ -1,92 +1,65 @@
-import emojiRegex from "emoji-regex";
-
-type EmojiMetadata = {
-  data: Record<
-    string,
-    {
-      emoji: string;
-      keywords: string[];
-      alt: string;
-      gBoardOrder: number;
-      combinations: {
-        gStaticUrl: string;
-        leftEmoji: string;
-        rightEmoji: string;
-      }[];
-    }
-  >;
-};
+import {
+  AutoTokenizer,
+  BertPreTrainedModel,
+  PreTrainedTokenizer,
+  Tensor,
+} from "@xenova/transformers";
 
 export async function generateUsingEmoji({ prompt }: { prompt: string }) {
-  const metadata = (await (
-    await fetch(generateCorsSafeUrl("https://backend.emojikitchen.dev"))
-  ).json()) as EmojiMetadata;
+  const emojiDataPromise = import("@/assets/emoji-embeddings.json");
 
-  const emojis = new Map(
-    prompt.match(emojiRegex())?.map((match) => [match[0], 100]) ?? []
+  const tokenizer = await AutoTokenizer.from_pretrained(
+    "Qdrant/bge-small-en-v1.5-onnx-Q"
   );
 
-  for (const emoji of Object.values(metadata.data)) {
-    const keywords = emoji.keywords.filter((keyword) =>
-      prompt.toLowerCase().includes(keyword.toLowerCase().replace(/_/g, " "))
-    );
-    if (keywords.length) {
-      emojis.set(
-        emoji.emoji,
-        Math.max(
-          emojis.get(emoji.emoji) ?? 0,
-          prompt.toLowerCase().includes(emoji.alt)
-            ? 100
-            : Math.max(...keywords.map((k) => k.length)) - emoji.keywords.length
-        )
-      );
+  const model = (await BertPreTrainedModel.from_pretrained(
+    "Qdrant/bge-small-en-v1.5-onnx-Q",
+    {
+      model_file_name: "../model_optimized",
+      quantized: false,
+    }
+  )) as BertPreTrainedModel;
+  const binaryEmbedding = await embedString(tokenizer, prompt, model);
+
+  const emojiData = (await emojiDataPromise) as {
+    default: { embed: string; gStaticUrl: string }[];
+  };
+
+  let maxSim = 0,
+    maxUrl: string | null = null;
+  for (const emoji of emojiData.default) {
+    const sim = similarity(binaryEmbedding, emoji.embed);
+    if (sim > maxSim) {
+      maxSim = sim;
+      maxUrl = emoji.gStaticUrl;
     }
   }
 
-  if (emojis.size === 0) {
-    throw new Error("No emojis found");
-  }
+  if (maxUrl) return maxUrl;
 
-  if (emojis.size === 1) {
-    return generateSingleEmoji(emojis.keys().next().value);
-  }
-
-  const sortedEmojis = Array.from(emojis).sort((a, b) => b[1] - a[1]);
-  for (const [emoji] of sortedEmojis) {
-    const emojiMetadata = Object.values(metadata.data).find(
-      (obj) => obj.emoji === emoji
-    );
-    const combo = emojiMetadata?.combinations.map(
-      (combo) =>
-        [
-          combo,
-          (emojis.get(combo.leftEmoji) ?? -20) +
-            (emojis.get(combo.rightEmoji) ?? -20),
-        ] as const
-    );
-    combo?.sort((a, b) => b[1] - a[1]);
-    if (combo?.length) {
-      return generateCorsSafeUrl(combo[0][0].gStaticUrl);
-    }
-  }
-
-  return generateSingleEmoji(emojis.keys().next().value);
+  throw new Error("Not implemented");
 }
 
-async function generateSingleEmoji(emoji: string) {
-  const canvas = new OffscreenCanvas(512, 512);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Failed to get canvas context");
-  }
-  ctx.font = '400 430px "Noto Color Emoji"';
-  ctx.fillStyle = "black";
-  const rect = ctx.measureText(emoji);
-  ctx.fillText(emoji, (512 - rect.width) / 2, 410);
-
-  return URL.createObjectURL(await canvas.convertToBlob());
+async function embedString(
+  tokenizer: PreTrainedTokenizer,
+  prompt: string,
+  model: BertPreTrainedModel
+) {
+  const tokens = tokenizer(prompt);
+  const output = await model(tokens);
+  const embedding = output.last_hidden_state as Tensor;
+  const binaryEmbedding = embedding
+    .slice(0, 0, null)
+    .tolist()
+    .map((x) => (x > 0 ? 1 : 0));
+  return binaryEmbedding;
 }
 
-function generateCorsSafeUrl(url: string) {
-  return "https://corsproxy.io/?" + encodeURIComponent(url);
+function similarity(source: number[], target: string) {
+  const decoded = atob(target);
+  let result = 0;
+  for (let i = 0; i < decoded.length; i++) {
+    result += source[i] & decoded.charCodeAt(i);
+  }
+  return result;
 }
